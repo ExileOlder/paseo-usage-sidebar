@@ -103,3 +103,16 @@ describe("a reorder while one provider is missing", () => {
     );
   });
 });
+
+
+describe("subscription aliases", () => {
+  it("renames only the selected provider while keeping its pin identity", () => {
+    const provider: ProviderUsage = { providerId: "antigravity-cli", displayName: "Antigravity (Default)", status: "available", planLabel: null, windows: [{id:"weekly",label:"Weekly",usedPct:20}], balances: [], details: [] };
+    const snapshot: UsageSnapshot = { fetchedAt: null, source: "sdk", providers: [provider] };
+    const base = { keys: ["antigravity-cli:weekly"], configured: true, displayAs: "remaining" as const };
+    const label = (_p: ProviderUsage, w: {label: string}) => w.label;
+    assert.equal(pinnedRows(snapshot, {...base, aliases: {"antigravity-cli":"Antigravity-My"}}, label, messagesFor("en"))[0].providerName, "Antigravity-My");
+    assert.equal(pinnedRows(snapshot, {...base, aliases: {"antigravity-cli":"  "}}, label, messagesFor("en"))[0].providerName, provider.displayName);
+    assert.equal(pinnedRows(snapshot, base, label, messagesFor("en"))[0].key, "antigravity-cli:weekly");
+  });
+});

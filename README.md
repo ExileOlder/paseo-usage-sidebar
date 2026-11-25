@@ -78,6 +78,8 @@ paseo plugin add RUIIIOVO/paseo-usage-sidebar
 
 ---
 
+In **Sidebar subscription names**, enter a custom name and select **Save**. Clear the field and save to restore the original name.
+
 ## 🔄 Updating
 
 Update with:

@@ -175,7 +175,7 @@ function readAppearance(): Appearance | null {
 }
 
 type MeterRow = { label: string; usedPct: number | null; tone: UsageTone; window: UsageWindow };
-type MeterGroup = { provider: string; rows: MeterRow[] };
+type MeterGroup = { providerId: string; provider: string; rows: MeterRow[] };
 
 type RowTiming = { text: string | null; atRisk: boolean; alternate: string | null };
 
@@ -214,10 +214,10 @@ function toGroups(snapshot: UsageSnapshot, selection: Selection, messages: Messa
       window: row.window,
     };
     const last = groups[groups.length - 1];
-    if (last && last.provider === row.providerName) {
+    if (last && last.providerId === row.providerId) {
       last.rows.push(entry);
     } else {
-      groups.push({ provider: row.providerName, rows: [entry] });
+      groups.push({ providerId: row.providerId, provider: row.providerName, rows: [entry] });
     }
   }
   return groups;

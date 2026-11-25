@@ -14,6 +14,7 @@ export const SelectionSchema = z.object({
   /** False until the user picks anything; the meter then shows its own default. */
   configured: z.boolean().default(false),
   displayAs: z.enum(["used", "remaining"]).default("used"),
+  aliases: z.record(z.string(), z.string()).optional(),
 });
 
 export type Selection = z.output<typeof SelectionSchema>;
@@ -29,6 +30,7 @@ export const writeSelection = defineRpc({
   input: z.object({
     keys: z.array(z.string()),
     displayAs: z.enum(["used", "remaining"]).optional(),
+    aliases: z.record(z.string(), z.string()).optional(),
   }),
   output: SelectionSchema,
 });
@@ -106,7 +108,7 @@ export function pinnedRows(
     rows.push({
       key,
       providerId: provider.providerId,
-      providerName: provider.displayName,
+      providerName: selection.aliases?.[provider.providerId]?.trim() || provider.displayName,
       label: labelFor(provider, window, messages),
       usedPct: windowDisplayPct(window, selection.displayAs),
       window,

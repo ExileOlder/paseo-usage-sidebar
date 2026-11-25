@@ -9,6 +9,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
   type StyleProp,
   type ViewStyle,
@@ -713,6 +714,30 @@ function OrderBlock({
   );
 }
 
+function AliasEditor({ provider, alias, theme, styles, locale, busy, onSave }: {
+  provider: ProviderUsage; alias: string; theme: PluginTheme; styles: Styles; locale: Locale;
+  busy: boolean; onSave: (value: string) => void;
+}) {
+  const [draft, setDraft] = useState(alias);
+  useEffect(() => setDraft(alias), [alias]);
+  const zh = locale === "zh-CN";
+  return (
+    <View style={{ padding: 12, gap: 6 }}>
+      <Text style={{ color: theme.colors.foregroundMuted, fontSize: 12 }}>{provider.displayName}</Text>
+      <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+        <TextInput accessibilityLabel={`${zh ? "侧栏名称" : "Sidebar name"}: ${provider.displayName}`}
+          value={draft} onChangeText={setDraft} placeholder={provider.displayName}
+          placeholderTextColor={theme.colors.foregroundMuted} maxLength={80}
+          style={{ flex: 1, minWidth: 0, color: theme.colors.foreground, borderColor: theme.colors.border, borderWidth: 1, borderRadius: 6, padding: 8 }} />
+        <Pressable accessibilityRole="button" accessibilityLabel={`${zh ? "保存" : "Save"}: ${provider.displayName}`}
+          disabled={busy} onPress={() => onSave(draft.trim())} style={styles.retryButton}>
+          <Text style={styles.retryLabel}>{zh ? "保存" : "Save"}</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 function ProviderBlock({
   provider,
   stale,
@@ -919,6 +944,7 @@ export function UsageSurface({ theme, layout }: PluginSurfaceProps) {
   const [localDisplayAs, setLocalDisplayAs] = useState<DisplayMode | null>(null);
   const order = localOrder ?? persistedOrder;
   const displayAs: DisplayMode = localDisplayAs ?? selectionQuery.data?.displayAs ?? "used";
+  const aliases = selectionQuery.data?.aliases ?? {};
   const pinnedKeys = useMemo(() => new Set(order), [order]);
 
   const pinned: PinnedRow[] = useMemo(() => {
@@ -927,14 +953,14 @@ export function UsageSurface({ theme, layout }: PluginSurfaceProps) {
     }
     return pinnedRows(
       query.data,
-      { keys: order, configured: true, displayAs },
+      { keys: order, configured: true, displayAs, aliases },
       (_provider, window) => windowLabel(window, messages),
       messages,
     );
-  }, [query.data, order, displayAs, messages]);
+  }, [query.data, order, displayAs, aliases, messages]);
 
   const savePins = useMutation({
-    mutationFn: (input: { keys: string[]; displayAs?: DisplayMode }) => persistSelection(input),
+    mutationFn: (input: { keys: string[]; displayAs?: DisplayMode; aliases?: Record<string, string> }) => persistSelection(input),
     onSuccess: (selection) => {
       queryClient.setQueryData(["usage-sidebar", "selection"], selection);
       publishSelection(selection);
@@ -1046,6 +1072,26 @@ export function UsageSurface({ theme, layout }: PluginSurfaceProps) {
                   {messages.displayRemaining}
                 </Text>
               </Pressable>
+            </View>
+          </View>
+        ) : null}
+
+        {providers.length > 0 ? (
+          <View style={styles.orderSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionHeaderTitle}>{locale === "zh-CN" ? "侧栏订阅名称" : "Sidebar subscription names"}</Text>
+            </View>
+            <View style={styles.card}>
+              {providers.map((provider) => (
+                <AliasEditor key={provider.providerId} provider={provider} alias={aliases[provider.providerId] ?? ""}
+                  theme={theme} styles={styles} locale={locale} busy={selectionQuery.isPending || savePins.isPending}
+                  onSave={(value) => {
+                    const next = { ...aliases };
+                    if (value) next[provider.providerId] = value;
+                    else delete next[provider.providerId];
+                    savePins.mutate({ keys: order, aliases: next });
+                  }} />
+              ))}
             </View>
           </View>
         ) : null}

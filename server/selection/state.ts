@@ -32,9 +32,11 @@ export function readSelectionState(): Selection {
 export function writeSelectionState({
   keys,
   displayAs,
+  aliases,
 }: {
   keys: string[];
   displayAs?: "used" | "remaining";
+  aliases?: Record<string, string>;
 }): Selection {
   const current = readSelectionState();
   const unique = [...new Set(keys.filter((key) => typeof key === "string" && key.length > 0))];
@@ -42,6 +44,7 @@ export function writeSelectionState({
     keys: unique,
     configured: true,
     displayAs: displayAs ?? current.displayAs ?? "used",
+    aliases: aliases ?? current.aliases,
   };
   const path = stateFile();
   try {

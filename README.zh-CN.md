@@ -78,6 +78,8 @@ paseo plugin add RUIIIOVO/paseo-usage-sidebar
 
 ---
 
+在 **侧栏订阅名称** 中输入自定义名称并点击 **保存**；清空输入框并保存可恢复原名称。
+
 ## 🔄 更新
 
 更新命令如下：
